@@ -1,0 +1,84 @@
+version: "3"
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: ./backend 
+      args:
+        requirements: requirements/base.txt
+    image: backend-image
+    restart: "always"
+    container_name: backend-container
+    command: sh -c 'python ./backend/manage.py migrate && python ./backend/manage.py runserver 0.0.0.0:8000'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.desarrollo
+    depends_on:
+      - db
+    networks:
+      - dev-quiz-network
+  db:
+    restart: "always"
+    platform: linux/x86_64
+    image: mysql:5.7
+    container_name: dev-quiz-db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=pspassword
+      - MYSQL_USER=quiz
+      - MYSQL_PASSWORD=pspassword
+      - MYSQL_DATABASE=quizdb
+    volumes:
+      - quiz_mysql_data_desarrollo:/var/lib/mysql
+    networks:
+      - dev-quiz-network
+
+  frontend:
+    container_name: frontend-container
+    restart: always
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: frontend-image
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_PROXY_TARGET=http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - path: ./frontend/src
+          target: /app/src
+          action: sync
+        - path: ./frontend/package.json
+          target: /app/package.json
+          action: rebuild
+        - path: ./frontend/vite.config.js
+          target: /app/vite.config.js
+          action: rebuild
+    networks:
+      - dev-quiz-network
+
+  adminer:
+      image: adminer
+      restart: always
+      container_name: adminer-db-container
+      ports:
+        - "8081:8080"
+      networks:
+        - dev-quiz-network
+volumes:
+  quiz_mysql_data_desarrollo:
+  frontend_node_modules:
+
+networks:
+  dev-quiz-network:
+    driver: bridge
