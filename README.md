@@ -1,4 +1,4 @@
-# Physio Story — Proyecto Final (Ley de Enfriamiento de Newton)
+# Ley de Enfriamiento de Newton
 
 Aplicación web desarrollada para la asignatura de Matemáticas (Quiz 1) que implementa el modelo para la **Ley de Enfriamiento de Newton**. 
 El proyecto está organizado en un monorepo con **backend** (API REST en Django) y **frontend** (SPA en Vue 3).
